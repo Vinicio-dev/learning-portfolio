@@ -1,0 +1,4 @@
+Distro: Zorin 18 debian based
+Kernel version : 37 24.04.1 -Ubuntu
+Disk layout: One disk 5 partitions 
+Network interface name : eno 1
