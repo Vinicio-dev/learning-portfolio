@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Production VPC architecture with Public and Private Subnets.",
+  "Description": "Production VPC architecture with fully routed Public and Private Subnets.",
   "Resources": {
     "PortfolioVPC": {
       "Type": "AWS::EC2::VPC",
@@ -8,12 +8,7 @@
         "CidrBlock": "10.0.0.0/16",
         "EnableDnsSupport": true,
         "EnableDnsHostnames": true,
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "CloudOps-Production-VPC"
-          }
-        ]
+        "Tags": [ { "Key": "Name", "Value": "CloudOps-Production-VPC" } ]
       }
     },
     "PublicSubnet": {
@@ -23,12 +18,7 @@
         "CidrBlock": "10.0.1.0/24",
         "MapPublicIpOnLaunch": true,
         "AvailabilityZone": { "Fn::Select": [ 0, { "Fn::GetAZs": "" } ] },
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "Public-Subnet-A"
-          }
-        ]
+        "Tags": [ { "Key": "Name", "Value": "Public-Subnet-A" } ]
       }
     },
     "PrivateSubnet": {
@@ -37,12 +27,43 @@
         "VpcId": { "Ref": "PortfolioVPC" },
         "CidrBlock": "10.0.2.0/24",
         "AvailabilityZone": { "Fn::Select": [ 0, { "Fn::GetAZs": "" } ] },
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "Private-Subnet-A"
-          }
-        ]
+        "Tags": [ { "Key": "Name", "Value": "Private-Subnet-A" } ]
+      }
+    },
+    "InternetGateway": {
+      "Type": "AWS::EC2::InternetGateway",
+      "Properties": {
+        "Tags": [ { "Key": "Name", "Value": "Production-IGW" } ]
+      }
+    },
+    "AttachGateway": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "VpcId": { "Ref": "PortfolioVPC" },
+        "InternetGatewayId": { "Ref": "InternetGateway" }
+      }
+    },
+    "PublicRouteTable": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": { "Ref": "PortfolioVPC" },
+        "Tags": [ { "Key": "Name", "Value": "Public-Route-Table" } ]
+      }
+    },
+    "PublicRoute": {
+      "Type": "AWS::EC2::Route",
+      "DependsOn": "AttachGateway",
+      "Properties": {
+        "RouteTableId": { "Ref": "PublicRouteTable" },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": { "Ref": "InternetGateway" }
+      }
+    },
+    "PublicSubnetRouteTableAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": { "Ref": "PublicSubnet" },
+        "RouteTableId": { "Ref": "PublicRouteTable" }
       }
     }
   }
