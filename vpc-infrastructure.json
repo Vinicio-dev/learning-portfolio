@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Foundational VPC architecture for portfolio.",
+  "Description": "Production VPC architecture with Public and Private Subnets.",
   "Resources": {
     "PortfolioVPC": {
       "Type": "AWS::EC2::VPC",
@@ -12,6 +12,35 @@
           {
             "Key": "Name",
             "Value": "CloudOps-Production-VPC"
+          }
+        ]
+      }
+    },
+    "PublicSubnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": { "Ref": "PortfolioVPC" },
+        "CidrBlock": "10.0.1.0/24",
+        "MapPublicIpOnLaunch": true,
+        "AvailabilityZone": { "Fn::Select": [ 0, { "Fn::GetAZs": "" } ] },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Public-Subnet-A"
+          }
+        ]
+      }
+    },
+    "PrivateSubnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": { "Ref": "PortfolioVPC" },
+        "CidrBlock": "10.0.2.0/24",
+        "AvailabilityZone": { "Fn::Select": [ 0, { "Fn::GetAZs": "" } ] },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Private-Subnet-A"
           }
         ]
       }
