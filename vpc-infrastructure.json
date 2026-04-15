@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Production VPC architecture with Compute, NAT, and S3 Endpoint.",
+  "Description": "Production VPC architecture with Compute, NAT, S3 Endpoint, and SSM Access.",
   "Parameters": {
     "InstanceType": {
       "Type": "String",
@@ -130,6 +130,32 @@
         "Tags": [ { "Key": "Name", "Value": "Private-Server-SG" } ]
       }
     },
+    "ServerRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": { "Service": ["ec2.amazonaws.com"] },
+              "Action": ["sts:AssumeRole"]
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+        ],
+        "Tags": [ { "Key": "Name", "Value": "Backend-Server-Role" } ]
+      }
+    },
+    "ServerInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Roles": [ { "Ref": "ServerRole" } ],
+        "InstanceProfileName": "Backend-Server-Profile"
+      }
+    },
     "ApplicationServer": {
       "Type": "AWS::EC2::Instance",
       "Properties": {
@@ -137,6 +163,7 @@
         "ImageId": "{{resolve:ssm:/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2}}",
         "SubnetId": { "Ref": "PrivateSubnet" },
         "SecurityGroupIds": [ { "Ref": "PrivateSecurityGroup" } ],
+        "IamInstanceProfile": { "Ref": "ServerInstanceProfile" },
         "Tags": [ { "Key": "Name", "Value": "Backend-App-Server" } ]
       }
     }
