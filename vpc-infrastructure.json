@@ -1,6 +1,14 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Production VPC architecture with Public/Private Subnets, NAT, and S3 Gateway Endpoint.",
+  "Description": "Production VPC architecture with Compute, NAT, and S3 Endpoint.",
+  "Parameters": {
+    "InstanceType": {
+      "Type": "String",
+      "Default": "t2.micro",
+      "AllowedValues": ["t2.micro", "t3.micro"],
+      "Description": "Instance type for the application server"
+    }
+  },
   "Resources": {
     "PortfolioVPC": {
       "Type": "AWS::EC2::VPC",
@@ -105,6 +113,31 @@
         "ServiceName": { "Fn::Sub": "com.amazonaws.${AWS::Region}.s3" },
         "VpcEndpointType": "Gateway",
         "RouteTableIds": [ { "Ref": "PrivateRouteTable" } ]
+      }
+    },
+    "PrivateSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Allow internal VPC traffic only",
+        "VpcId": { "Ref": "PortfolioVPC" },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "-1",
+            "CidrIp": "10.0.0.0/16",
+            "Description": "Allow all traffic from within the VPC"
+          }
+        ],
+        "Tags": [ { "Key": "Name", "Value": "Private-Server-SG" } ]
+      }
+    },
+    "ApplicationServer": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "InstanceType": { "Ref": "InstanceType" },
+        "ImageId": "{{resolve:ssm:/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2}}",
+        "SubnetId": { "Ref": "PrivateSubnet" },
+        "SecurityGroupIds": [ { "Ref": "PrivateSecurityGroup" } ],
+        "Tags": [ { "Key": "Name", "Value": "Backend-App-Server" } ]
       }
     }
   }
