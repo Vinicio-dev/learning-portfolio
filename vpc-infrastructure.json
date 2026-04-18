@@ -127,7 +127,10 @@
             "Description": "Allow all traffic from within the VPC"
           }
         ],
-        "Tags": [ { "Key": "Name", "Value": "Private-Server-SG" } ]
+        "Tags": [ 
+		{ "Key": "Name", "Value": "Private-Server-SG" },
+		{ "Key": "Environment", "Value": "Production" }
+       	]
       }
     },
     "ServerRole": {
